@@ -1,0 +1,99 @@
+.exercise-card {
+  margin-bottom: 8px;
+}
+
+.exercise-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.exercise-header h3 {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.metric-selector {
+  display: flex;
+  gap: 4px;
+}
+
+.metric-selector button {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+}
+
+.metric-selector button.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.benchmark-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(108, 99, 255, 0.08);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+}
+
+.benchmark-label {
+  color: var(--text-secondary);
+}
+
+.benchmark-value {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.benchmark-progress {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.chart-container {
+  margin-bottom: 16px;
+}
+
+.session-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.session-table th {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.session-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(45, 50, 80, 0.5);
+  color: var(--text-primary);
+}
+
+.session-table tr:last-child td {
+  border-bottom: none;
+}
+
+.set-details-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
