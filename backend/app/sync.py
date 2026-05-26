@@ -16,15 +16,54 @@ from .schemas import SyncResult, Notification
 
 
 def get_note_files(vault_path: str, subfolder: str = "") -> list[Path]:
-    """Find all markdown files in the vault/subfolder."""
-    base = Path(vault_path)
+    """Find all markdown files in the vault/subfolder, recursively.
+
+    Supports an Obsidian layout where daily notes are grouped under
+    sub-folders such as Push/, Pull/, Legs/ within the configured root.
+    Ignores anything inside hidden folders (e.g. `.obsidian`, `.trash`),
+    EXCEPT we still want to surface iCloud `.icloud` placeholder files
+    to the caller via `find_undownloaded_icloud_files`.
+    """
+    base = Path(vault_path).expanduser()
     if subfolder:
         base = base / subfolder
 
     if not base.exists():
         return []
 
-    return sorted(base.glob("*.md"))
+    def _is_hidden(path: Path) -> bool:
+        try:
+            rel = path.relative_to(base)
+        except ValueError:
+            return False
+        # A file inside a hidden directory should be ignored.
+        return any(part.startswith(".") for part in rel.parts[:-1])
+
+    return sorted(p for p in base.rglob("*.md") if not _is_hidden(p))
+
+
+def find_undownloaded_icloud_files(vault_path: str, subfolder: str = "") -> list[Path]:
+    """Return any iCloud placeholder stubs that look like undownloaded .md notes.
+
+    macOS represents an iCloud file that has not yet been downloaded to local
+    storage as `.<original_filename>.icloud`. The Documents Provider materializes
+    the real file only on access (or when the user opts in via Finder). Until
+    then, our `*.md` glob will silently miss those notes, which is a major
+    source of "my notes aren't showing up" confusion.
+    """
+    base = Path(vault_path).expanduser()
+    if subfolder:
+        base = base / subfolder
+    if not base.exists():
+        return []
+
+    placeholders: list[Path] = []
+    for p in base.rglob("*.icloud"):
+        # Match `.foo.md.icloud` style stubs that correspond to an .md note.
+        name = p.name
+        if name.startswith(".") and name.endswith(".icloud") and ".md" in name:
+            placeholders.append(p)
+    return placeholders
 
 
 def sync_notes(db: Session, config: dict) -> SyncResult:
@@ -49,26 +88,56 @@ def sync_notes(db: Session, config: dict) -> SyncResult:
     sets_added = 0
     errors: list[str] = []
     notifications: list[Notification] = []
+    scanned_paths = [str(p) for p in note_files]
+    skipped_paths: list[str] = []
+
+    base_check = Path(vault_path).expanduser()
+    if subfolder:
+        base_check = base_check / subfolder
+    if not base_check.exists():
+        errors.append(f"Configured notes folder does not exist: {base_check}")
+
+    if files_scanned == 0 and base_check.exists():
+        errors.append(
+            f"No .md files found under {base_check}. "
+            "Check that your daily notes are in this folder or a subfolder of it."
+        )
+
+    placeholders = find_undownloaded_icloud_files(vault_path, subfolder)
+    if placeholders:
+        sample = ", ".join(p.name for p in placeholders[:3])
+        more = f" (+{len(placeholders) - 3} more)" if len(placeholders) > 3 else ""
+        errors.append(
+            f"{len(placeholders)} iCloud file(s) are not downloaded locally and "
+            f"were not scanned: {sample}{more}. "
+            "Open the Obsidian folder in Finder, right-click the affected files, "
+            "and choose 'Download Now' — or open them once in Obsidian — then "
+            "re-run sync."
+        )
 
     for filepath in note_files:
         filepath_str = str(filepath)
         current_hash = file_hash(filepath_str)
 
-        # Check if already synced with same hash
         existing = (
             db.query(SyncState)
             .filter(SyncState.file_path == filepath_str)
             .first()
         )
         if existing and existing.file_hash == current_hash:
+            skipped_paths.append(filepath_str)
             continue
 
-        # Parse the file
         try:
             content = filepath.read_text(encoding="utf-8")
             session = parse_markdown_note(content)
 
             if session is None:
+                errors.append(
+                    f"{filepath.name}: skipped (no Date field found — make sure the note "
+                    "starts with '- Date: MM/DD/YYYY')."
+                )
+                skipped_paths.append(filepath_str)
                 continue
 
             files_parsed += 1
@@ -140,4 +209,6 @@ def sync_notes(db: Session, config: dict) -> SyncResult:
         sets_added=sets_added,
         errors=errors,
         notifications=notifications,
+        scanned_paths=scanned_paths,
+        skipped_paths=skipped_paths,
     )

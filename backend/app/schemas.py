@@ -104,6 +104,8 @@ class SyncResult(BaseModel):
     sets_added: int
     errors: list[str] = []
     notifications: list[Notification] = []
+    scanned_paths: list[str] = []
+    skipped_paths: list[str] = []
 
 
 class ConfigOut(BaseModel):

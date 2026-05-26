@@ -74,6 +74,8 @@ export interface SyncResult {
   sets_added: number;
   errors: string[];
   notifications: { exercise_name: string; message: string; notification_type: string }[];
+  scanned_paths: string[];
+  skipped_paths: string[];
 }
 
 export interface AppConfig {

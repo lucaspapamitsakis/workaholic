@@ -23,6 +23,36 @@
   color: var(--danger);
 }
 
+.sync-paths {
+  margin-top: 12px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.sync-paths summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sync-paths ul {
+  list-style: none;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 0.75rem;
+}
+
+.sync-paths li {
+  padding: 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .empty-state {
   color: var(--text-secondary);
   font-style: italic;

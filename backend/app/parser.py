@@ -1,14 +1,23 @@
 """
 Parser for Obsidian markdown exercise notes.
 
-Expected format:
+Expected format (indentation may be tabs or spaces):
 - Date: MM/DD/YYYY
 - Session_Duration: XX min
 - Workout_Type: Push / Pull / Legs
 - Exercise_name: Name Here
-  - Muscle Tags: Primary / Secondary1 / Secondary2
-  - [Reps]x[Weight]: 10x15, 14x25, 12x30
-  - Duration @ Distance: 15m @ 2000m
+    - Muscle Tags: Primary / Secondary1 / Secondary2
+    - [Reps]x[Weight]: 10x15, 14x25, 12x30
+    - Duration @ Distance: 15m @ 2000m
+
+The parser is tolerant of:
+* Markdown headers (`# Foo`, `## Bar`, etc.) — they are ignored.
+* Exercise lines missing the `Exercise_name:` prefix (e.g. `- Push-ups`).
+* Mixed tabs/spaces for indentation.
+
+The parser uses leading-whitespace indentation to distinguish top-level
+session/exercise entries from nested exercise fields. This prevents
+indented sub-bullets from accidentally being attached to the wrong exercise.
 """
 import re
 import hashlib
@@ -188,8 +197,46 @@ def parse_duration_distance(raw: str) -> list[ParsedSet]:
     return sets
 
 
+_SESSION_KEYS = ("date:", "session_duration:", "workout_type:")
+_EXERCISE_FIELD_KEYS = (
+    "muscle tag", "muscle_tag", "[reps]", "reps x", "reps:", "duration @", "duration@",
+)
+
+
+def _leading_indent_cols(line: str) -> int:
+    """Count leading whitespace columns (tab = 4)."""
+    cols = 0
+    for ch in line:
+        if ch == "\t":
+            cols += 4
+        elif ch == " ":
+            cols += 1
+        else:
+            break
+    return cols
+
+
+def _strip_bullet(text: str) -> str:
+    return re.sub(r"^[-*●○+]\s*", "", text.strip())
+
+
+def _looks_like_exercise_field(clean: str) -> bool:
+    lower = clean.lower()
+    return any(lower.startswith(k) for k in _EXERCISE_FIELD_KEYS)
+
+
+def _looks_like_session_field(clean: str) -> bool:
+    lower = clean.lower()
+    return any(lower.startswith(k) for k in _SESSION_KEYS)
+
+
 def parse_markdown_note(content: str) -> Optional[ParsedSession]:
-    """Parse a full Obsidian markdown note into a ParsedSession."""
+    """Parse a full Obsidian markdown note into a ParsedSession.
+
+    The parser tracks indentation so that nested fields (Muscle Tags,
+    [Reps]x[Weight], Duration @ Distance) are attached to the most recent
+    *top-level* exercise rather than whatever exercise was last seen.
+    """
     lines = content.split("\n")
 
     session_date = None
@@ -198,82 +245,103 @@ def parse_markdown_note(content: str) -> Optional[ParsedSession]:
     exercises: list[ParsedExercise] = []
     current_exercise: Optional[ParsedExercise] = None
 
-    for line in lines:
-        stripped = line.strip()
-        if not stripped:
+    def _flush_current():
+        nonlocal current_exercise
+        if current_exercise and current_exercise.sets:
+            exercises.append(current_exercise)
+        current_exercise = None
+
+    for raw_line in lines:
+        if not raw_line.strip():
             continue
 
-        # Remove markdown bullet prefixes
-        clean = re.sub(r"^[-*●○]\s*", "", stripped)
-
-        # Parse session-level metadata
-        date_match = re.match(r"Date:\s*(.+)", clean, re.IGNORECASE)
-        if date_match:
-            raw_date = date_match.group(1).strip()
-            try:
-                session_date = datetime.strptime(raw_date, "%m/%d/%Y").date()
-            except ValueError:
-                try:
-                    session_date = datetime.strptime(raw_date, "%Y-%m-%d").date()
-                except ValueError:
-                    pass
+        # Skip markdown ATX headers (`# Heading`, `### Main Exercises`, etc.).
+        # This must happen *before* bullet stripping.
+        if raw_line.lstrip().startswith("#"):
             continue
 
-        dur_match = re.match(r"Session_Duration:\s*(\d+)\s*min", clean, re.IGNORECASE)
-        if dur_match:
-            session_duration = int(dur_match.group(1))
+        indent = _leading_indent_cols(raw_line)
+        is_top_level = indent == 0
+        clean = _strip_bullet(raw_line)
+        if not clean:
             continue
 
-        type_match = re.match(r"Workout_Type:\s*(.+)", clean, re.IGNORECASE)
-        if type_match:
-            workout_type = type_match.group(1).strip()
-            continue
-
-        # Parse exercise name
-        ex_match = re.match(r"Exercise[_ ]?name:\s*(.+)", clean, re.IGNORECASE)
-        if ex_match:
-            if current_exercise and current_exercise.sets:
-                exercises.append(current_exercise)
-            current_exercise = ParsedExercise(
-                name=ex_match.group(1).strip(),
-                primary_muscle_tag="",
-            )
-            continue
-
-        # If we're inside an exercise block, parse its fields
-        if current_exercise is not None:
-            tag_match = re.match(r"Muscle\s*Tags?:\s*(.+)", clean, re.IGNORECASE)
-            if tag_match:
-                tags = [t.strip() for t in tag_match.group(1).split("/") if t.strip()]
-                if tags:
-                    current_exercise.primary_muscle_tag = tags[0]
-                    current_exercise.secondary_muscle_tags = tags[1:] if len(tags) > 1 else []
+        if is_top_level:
+            date_match = re.match(r"Date:\s*(.+)", clean, re.IGNORECASE)
+            if date_match:
+                raw_date = date_match.group(1).strip()
+                for fmt in ("%m/%d/%Y", "%Y-%m-%d", "%m-%d-%Y", "%Y/%m/%d"):
+                    try:
+                        session_date = datetime.strptime(raw_date, fmt).date()
+                        break
+                    except ValueError:
+                        continue
                 continue
 
-            rw_match = re.match(r"\[?Reps\]?\s*x\s*\[?Weight\]?:\s*(.+)", clean, re.IGNORECASE)
-            if rw_match:
-                rw_sets = parse_reps_weight(rw_match.group(1))
-                if rw_sets:
-                    current_exercise.sets.extend(rw_sets)
+            dur_match = re.match(r"Session_Duration:\s*(\d+)\s*min", clean, re.IGNORECASE)
+            if dur_match:
+                session_duration = int(dur_match.group(1))
                 continue
 
-            dd_match = re.match(r"Duration\s*@\s*Distance:\s*(.+)", clean, re.IGNORECASE)
-            if dd_match:
-                dd_sets = parse_duration_distance(dd_match.group(1))
-                if dd_sets:
-                    # If we already have sets from reps/weight, merge duration info
-                    # Otherwise add as new sets
-                    if current_exercise.sets and not dd_sets[0].reps:
-                        # Extend set numbers
-                        offset = len(current_exercise.sets)
-                        for s in dd_sets:
-                            s.set_number += offset
-                    current_exercise.sets.extend(dd_sets)
+            type_match = re.match(r"Workout_Type:\s*(.+)", clean, re.IGNORECASE)
+            if type_match:
+                workout_type = type_match.group(1).strip()
                 continue
 
-    # Don't forget the last exercise
-    if current_exercise and current_exercise.sets:
-        exercises.append(current_exercise)
+            # A top-level bullet that isn't session metadata is treated as a
+            # new exercise. The `Exercise_name:` prefix is optional.
+            ex_match = re.match(r"Exercise[_ ]?name:\s*(.+)", clean, re.IGNORECASE)
+            if ex_match:
+                name = ex_match.group(1).strip()
+            elif _looks_like_exercise_field(clean):
+                # A field that should have been indented under an exercise but
+                # was written at the top level. Treat it as belonging to the
+                # current exercise rather than starting a new one.
+                name = None
+            else:
+                name = clean.rstrip(":").strip()
+
+            if name is not None:
+                _flush_current()
+                current_exercise = ParsedExercise(
+                    name=name,
+                    primary_muscle_tag="",
+                )
+                continue
+            # else: fall through to field-matching below
+
+        if current_exercise is None:
+            continue
+
+        tag_match = re.match(r"Muscle\s*Tags?:\s*(.+)", clean, re.IGNORECASE)
+        if tag_match:
+            tags = [t.strip() for t in tag_match.group(1).split("/") if t.strip()]
+            if tags:
+                current_exercise.primary_muscle_tag = tags[0]
+                current_exercise.secondary_muscle_tags = tags[1:] if len(tags) > 1 else []
+            continue
+
+        rw_match = re.match(r"\[?Reps\]?\s*x\s*\[?Weight\]?:\s*(.+)", clean, re.IGNORECASE)
+        if rw_match:
+            rw_sets = parse_reps_weight(rw_match.group(1))
+            if rw_sets:
+                offset = len(current_exercise.sets)
+                for s in rw_sets:
+                    s.set_number += offset
+                current_exercise.sets.extend(rw_sets)
+            continue
+
+        dd_match = re.match(r"Duration\s*@?\s*Distance:?\s*(.+)", clean, re.IGNORECASE)
+        if dd_match:
+            dd_sets = parse_duration_distance(dd_match.group(1))
+            if dd_sets:
+                offset = len(current_exercise.sets)
+                for s in dd_sets:
+                    s.set_number += offset
+                current_exercise.sets.extend(dd_sets)
+            continue
+
+    _flush_current()
 
     if session_date is None:
         return None
