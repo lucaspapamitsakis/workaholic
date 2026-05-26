@@ -3,6 +3,7 @@ import Layout from "./components/Layout";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Dashboard from "./pages/Dashboard";
 import MuscleGroupPage from "./pages/MuscleGroupPage";
+import BenchmarksPage from "./pages/BenchmarksPage";
 import SettingsPage from "./pages/SettingsPage";
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="muscle/:muscleTag" element={<MuscleGroupPage />} />
+            <Route path="benchmarks" element={<BenchmarksPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>

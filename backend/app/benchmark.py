@@ -237,6 +237,8 @@ def _seed_benchmark_from_first_session(
         benchmark.increment_reps = config.get("default_reps_increment", 2)
     if benchmark.increment_duration_sec is None:
         benchmark.increment_duration_sec = config.get("default_duration_increment_sec", 5.0)
+    if benchmark.increment_pace_sec_per_m is None:
+        benchmark.increment_pace_sec_per_m = config.get("default_pace_increment_sec_per_m", 0.005)
 
 
 def evaluate_all(db: Session, config: dict) -> list[Notification]:
@@ -294,6 +296,7 @@ def evaluate_all(db: Session, config: dict) -> list[Notification]:
                 increment_weight_lbs=config.get("default_weight_increment_lbs", 5.0),
                 increment_reps=config.get("default_reps_increment", 2),
                 increment_duration_sec=config.get("default_duration_increment_sec", 5.0),
+                increment_pace_sec_per_m=config.get("default_pace_increment_sec_per_m", 0.005),
             )
             db.add(benchmark)
             db.flush()

@@ -17,6 +17,7 @@ import {
   formatDuration,
   formatNumber,
 } from "../utils/format";
+import BenchmarkIncrementEditor from "./BenchmarkIncrementEditor";
 import "./ExerciseCard.css";
 
 interface Props {
@@ -118,6 +119,13 @@ export default function ExerciseCard({ exerciseName }: Props) {
             ({benchmark.consecutive_successes} consecutive success
             {benchmark.consecutive_successes === 1 ? "" : "es"})
           </span>
+          <span className="benchmark-increment-hint">
+            {formatIncrement(benchmark)}
+          </span>
+          <BenchmarkIncrementEditor
+            benchmark={benchmark}
+            onSaved={setBenchmark}
+          />
         </div>
       )}
 
@@ -199,6 +207,22 @@ function formatBenchmark(b: Benchmark): string {
     return formatPacePer500m(b.benchmark_pace_sec_per_m);
   }
   return "—";
+}
+
+function formatIncrement(b: Benchmark): string {
+  if (b.benchmark_type === "weight_reps") {
+    return `+${b.increment_weight_lbs} lbs / +${b.increment_reps} reps`;
+  }
+  if (b.benchmark_type === "reps") {
+    return `+${b.increment_reps} reps`;
+  }
+  if (b.benchmark_type === "duration") {
+    return `+${b.increment_duration_sec}s`;
+  }
+  if (b.benchmark_type === "pace" && b.increment_pace_sec_per_m) {
+    return `−${(b.increment_pace_sec_per_m * 500).toFixed(2)} sec/500m`;
+  }
+  return "";
 }
 
 function formatSetDetails(s: ExerciseSessionAggregate): string {

@@ -11,6 +11,9 @@ DEFAULT_CONFIG = {
     "default_weight_increment_lbs": 5.0,
     "default_reps_increment": 2,
     "default_duration_increment_sec": 5.0,
+    # Pace progression: 0.005 sec/m == 2.5 sec/500m faster, a meaningful
+    # but achievable improvement target for rowing/running/cardio.
+    "default_pace_increment_sec_per_m": 0.005,
     "consolidation_threshold": 3,
 }
 

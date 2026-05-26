@@ -1,0 +1,87 @@
+.workout-summary-card {
+  margin-bottom: 24px;
+}
+
+.workout-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.workout-summary-header h3 {
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.period-selector {
+  display: flex;
+  gap: 4px;
+}
+
+.period-selector button {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+}
+
+.period-selector button.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.workout-summary-period {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.workout-summary-bars {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.workout-summary-bars li {
+  display: grid;
+  grid-template-columns: 80px 1fr 32px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+}
+
+.bar-label {
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.bar-track {
+  background: var(--bg-secondary);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+  transition: width 0.3s ease;
+}
+
+.bar-count {
+  text-align: right;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.workout-summary-card .muted {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}

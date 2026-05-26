@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import type { SessionSummary, SyncResult } from "../api/client";
 import { formatShortDate, formatNumber } from "../utils/format";
+import WorkoutSummaryCard from "../components/WorkoutSummaryCard";
 import "./Dashboard.css";
 
 export default function Dashboard() {
@@ -82,6 +83,8 @@ export default function Dashboard() {
           )}
         </div>
       )}
+
+      <WorkoutSummaryCard />
 
       <h3>Recent Sessions</h3>
       {sessions.length === 0 ? (

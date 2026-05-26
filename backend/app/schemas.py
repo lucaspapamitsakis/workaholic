@@ -117,6 +117,7 @@ class ConfigOut(BaseModel):
     default_weight_increment_lbs: float
     default_reps_increment: int
     default_duration_increment_sec: float
+    default_pace_increment_sec_per_m: float
     consolidation_threshold: int
 
 
@@ -127,4 +128,18 @@ class ConfigUpdate(BaseModel):
     default_weight_increment_lbs: Optional[float] = None
     default_reps_increment: Optional[int] = None
     default_duration_increment_sec: Optional[float] = None
+    default_pace_increment_sec_per_m: Optional[float] = None
     consolidation_threshold: Optional[int] = None
+
+
+class WorkoutTypeCount(BaseModel):
+    workout_type: str
+    count: int
+
+
+class WorkoutSummary(BaseModel):
+    period_days: int
+    start_date: date
+    end_date: date
+    total_sessions: int
+    by_type: list[WorkoutTypeCount]

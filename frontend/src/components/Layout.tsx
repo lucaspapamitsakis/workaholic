@@ -21,6 +21,9 @@ export default function Layout() {
           <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
             Dashboard
           </NavLink>
+          <NavLink to="/benchmarks" className={({ isActive }) => (isActive ? "active" : "")}>
+            Benchmarks
+          </NavLink>
           <div className="nav-section">
             <span className="nav-section-title">Muscle Groups</span>
             {muscleGroups.map((tag) => (

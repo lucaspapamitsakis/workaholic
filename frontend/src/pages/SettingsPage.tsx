@@ -103,6 +103,27 @@ export default function SettingsPage() {
         </div>
 
         <div className="form-group">
+          <label>Pace Increment (sec/m)</label>
+          <input
+            type="number"
+            value={config.default_pace_increment_sec_per_m}
+            onChange={(e) =>
+              setConfig({
+                ...config,
+                default_pace_increment_sec_per_m: parseFloat(e.target.value) || 0.005,
+              })
+            }
+            step={0.001}
+            min={0}
+          />
+          <span className="form-help">
+            How much faster the benchmark pace must become after a consolidation.
+            Default 0.005 sec/m ≈ 2.5 sec/500m faster, a meaningful but
+            achievable rowing/running improvement.
+          </span>
+        </div>
+
+        <div className="form-group">
           <label>Consolidation Threshold</label>
           <input
             type="number"

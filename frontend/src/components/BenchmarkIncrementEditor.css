@@ -1,0 +1,98 @@
+.benchmark-increment-editor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.increment-toggle {
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 2px 6px;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.increment-toggle:hover {
+  background: rgba(108, 99, 255, 0.12);
+  color: var(--accent);
+  border-color: var(--border);
+}
+
+.increment-popover {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  z-index: 50;
+  min-width: 240px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.increment-popover-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.increment-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.increment-field label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.increment-field input {
+  font-size: 0.85rem;
+  padding: 6px 8px;
+}
+
+.increment-hint {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  opacity: 0.75;
+}
+
+.increment-error {
+  font-size: 0.75rem;
+  color: var(--danger);
+}
+
+.increment-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.increment-actions button.ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+.increment-actions button.ghost:hover {
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+.increment-actions button.primary {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}

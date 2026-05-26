@@ -87,7 +87,43 @@ export interface AppConfig {
   default_weight_increment_lbs: number;
   default_reps_increment: number;
   default_duration_increment_sec: number;
+  default_pace_increment_sec_per_m: number;
   consolidation_threshold: number;
+}
+
+export interface WorkoutTypeCount {
+  workout_type: string;
+  count: number;
+}
+
+export interface WorkoutSummary {
+  period_days: number;
+  start_date: string;
+  end_date: string;
+  total_sessions: number;
+  by_type: WorkoutTypeCount[];
+}
+
+export interface BenchmarkHistory {
+  id: number;
+  exercise_name: string;
+  old_weight: number | null;
+  old_reps: number | null;
+  old_duration_sec: number | null;
+  old_pace: number | null;
+  new_weight: number | null;
+  new_reps: number | null;
+  new_duration_sec: number | null;
+  new_pace: number | null;
+  reason: string | null;
+  consolidated_at: string;
+}
+
+export interface BenchmarkIncrementUpdate {
+  increment_weight_lbs?: number;
+  increment_reps?: number;
+  increment_duration_sec?: number;
+  increment_pace_sec_per_m?: number;
 }
 
 export const api = {
@@ -106,14 +142,20 @@ export const api = {
 
   getAllBenchmarks: () => request<Benchmark[]>("/benchmarks"),
 
-  updateBenchmarkIncrements: (name: string, data: Partial<Benchmark>) =>
+  updateBenchmarkIncrements: (name: string, data: BenchmarkIncrementUpdate) =>
     request<Benchmark>(`/benchmarks/${encodeURIComponent(name)}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
 
+  getBenchmarkHistory: (name: string) =>
+    request<BenchmarkHistory[]>(`/benchmarks/${encodeURIComponent(name)}/history`),
+
   getRecentSessions: (limit = 10) =>
     request<SessionSummary[]>(`/sessions?limit=${limit}`),
+
+  getWorkoutSummary: (days = 30) =>
+    request<WorkoutSummary>(`/sessions/summary?days=${days}`),
 
   triggerSync: () => request<SyncResult>("/sync", { method: "POST" }),
 
