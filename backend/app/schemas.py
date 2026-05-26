@@ -38,11 +38,13 @@ class ExerciseSessionAggregate(BaseModel):
     exercise_name: str
     total_sets: int
     total_volume: Optional[float] = None
+    total_reps: Optional[int] = None
     best_set_weight: Optional[float] = None
     best_set_reps: Optional[int] = None
     best_set_1rm: Optional[float] = None
     best_set_duration_sec: Optional[float] = None
     best_set_pace: Optional[float] = None
+    best_reps_in_session: Optional[int] = None
     benchmark_reached: bool = False
     set_details: list[ExerciseSetOut] = []
 

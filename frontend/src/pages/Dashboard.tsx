@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import type { SessionSummary, SyncResult } from "../api/client";
+import { formatShortDate, formatNumber } from "../utils/format";
 import "./Dashboard.css";
 
 export default function Dashboard() {
@@ -92,7 +93,7 @@ export default function Dashboard() {
         <div className="sessions-grid">
           {sessions.map((s) => (
             <div key={s.date} className="card session-card">
-              <div className="session-date">{s.date}</div>
+              <div className="session-date">{formatShortDate(s.date)}</div>
               <div className="session-type">
                 <span className="badge warning">{s.workout_type || "—"}</span>
                 {s.session_duration_min && (
@@ -107,8 +108,16 @@ export default function Dashboard() {
                 ))}
               </ul>
               {s.total_volume != null && (
-                <div className="session-volume">
-                  Volume: {s.total_volume.toLocaleString()} lbs
+                <div
+                  className="session-volume"
+                  title={
+                    "Total tonnage for the session: Σ(weight × reps) across " +
+                    "every weighted set. Bodyweight and duration-only sets " +
+                    "contribute 0."
+                  }
+                >
+                  Volume: {formatNumber(s.total_volume, 0)} lbs
+                  <span className="info-marker"> ⓘ</span>
                 </div>
               )}
             </div>

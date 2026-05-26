@@ -35,11 +35,13 @@ export interface ExerciseSessionAggregate {
   exercise_name: string;
   total_sets: number;
   total_volume: number | null;
+  total_reps: number | null;
   best_set_weight: number | null;
   best_set_reps: number | null;
   best_set_1rm: number | null;
   best_set_duration_sec: number | null;
   best_set_pace: number | null;
+  best_reps_in_session: number | null;
   benchmark_reached: boolean;
   set_details: ExerciseSet[];
 }

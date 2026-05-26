@@ -110,4 +110,11 @@ h3 {
   margin-top: 4px;
   padding-top: 8px;
   border-top: 1px solid var(--border);
+  cursor: help;
+}
+
+.info-marker {
+  opacity: 0.5;
+  font-size: 0.7rem;
+  margin-left: 2px;
 }
